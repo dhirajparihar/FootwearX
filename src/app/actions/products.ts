@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 
 const singleProductSchema = z
@@ -50,7 +50,7 @@ const batchProductSchema = z.object({
 });
 
 export async function createProduct(formData: FormData) {
-  const user = await requireRole(["OWNER", "MANAGER"]);
+  const user = await requirePermission("manage_products");
   const data = singleProductSchema.parse(Object.fromEntries(formData.entries()));
 
   await prisma.$transaction(async (tx) => {
@@ -108,7 +108,7 @@ export async function createProduct(formData: FormData) {
 
 export async function createBatchProduct(input: unknown) {
   try {
-    const user = await requireRole(["OWNER", "MANAGER"]);
+    const user = await requirePermission("manage_products");
     const data = batchProductSchema.parse(input);
 
     const result = await prisma.$transaction(async (tx) => {
@@ -178,7 +178,7 @@ export async function createBatchProduct(input: unknown) {
 
 export async function createBrand(name: string) {
   try {
-    const user = await requireRole(["OWNER", "MANAGER"]);
+    const user = await requirePermission("manage_products");
     const trimmed = name.trim();
     if (!trimmed) return { ok: false as const, error: "Brand name is required." };
 
@@ -199,7 +199,7 @@ export async function createBrand(name: string) {
 
 export async function createCategory(name: string) {
   try {
-    const user = await requireRole(["OWNER", "MANAGER"]);
+    const user = await requirePermission("manage_products");
     const trimmed = name.trim();
     if (!trimmed) return { ok: false as const, error: "Category name is required." };
 
@@ -221,7 +221,7 @@ export async function createCategory(name: string) {
 // ── Existing actions ─────────────────────────────────────────────────────────
 
 export async function updateProductDetails(formData: FormData) {
-  const user = await requireRole(["OWNER", "MANAGER"]);
+  const user = await requirePermission("manage_products");
 
   const productId = String(formData.get("productId"));
   const name = String(formData.get("name")).trim();
@@ -271,7 +271,7 @@ export async function updateVariant(input: {
   isActive: boolean;
 }) {
   try {
-    const user = await requireRole(["OWNER", "MANAGER"]);
+    const user = await requirePermission("manage_products");
 
     await prisma.$transaction(async (tx) => {
       const current = await tx.productVariant.findFirst({
@@ -326,7 +326,7 @@ export async function addVariantToProduct(input: {
   minimumStock: number;
 }) {
   try {
-    const user = await requireRole(["OWNER", "MANAGER"]);
+    const user = await requirePermission("manage_products");
 
     await prisma.$transaction(async (tx) => {
       const product = await tx.product.findFirst({ where: { id: input.productId, shopId: user.shopId } });

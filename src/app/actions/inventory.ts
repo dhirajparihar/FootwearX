@@ -8,10 +8,10 @@ import {
   returnSale,
   returnPurchase,
 } from "@/services/inventory";
-import { requireRole } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 export async function adjust(formData: FormData) {
-  const user = await requireRole(["OWNER", "MANAGER", "STAFF"]);
+  const user = await requirePermission("manage_stock");
   await adjustStock({
     variantId: String(formData.get("variantId")),
     delta: Number(formData.get("delta")),
@@ -23,7 +23,7 @@ export async function adjust(formData: FormData) {
 }
 
 export async function damage(formData: FormData) {
-  const user = await requireRole(["OWNER", "MANAGER"]);
+  const user = await requirePermission("manage_stock");
   await damageStock({
     variantId: String(formData.get("variantId")),
     quantity: Number(formData.get("quantity")),
@@ -35,16 +35,16 @@ export async function damage(formData: FormData) {
 }
 
 export async function createPurchase(input: Omit<Parameters<typeof receivePurchase>[0], "userId" | "shopId">) {
-  const user = await requireRole(["OWNER", "MANAGER"]);
+  const user = await requirePermission("manage_stock");
   return receivePurchase({ ...input, userId: user.id, shopId: user.shopId });
 }
 
 export async function createSaleReturn(input: Omit<Parameters<typeof returnSale>[0], "userId" | "shopId">) {
-  const user = await requireRole(["OWNER", "MANAGER", "STAFF"]);
+  const user = await requirePermission("sell");
   return returnSale({ ...input, userId: user.id, shopId: user.shopId });
 }
 
 export async function createPurchaseReturn(input: Omit<Parameters<typeof returnPurchase>[0], "userId" | "shopId">) {
-  const user = await requireRole(["OWNER", "MANAGER"]);
+  const user = await requirePermission("manage_stock");
   return returnPurchase({ ...input, userId: user.id, shopId: user.shopId });
 }

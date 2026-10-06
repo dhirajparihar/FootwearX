@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { requireRole, requireUser } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { PurchaseForm } from "@/components/purchase-form";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
 export default async function NewPurchasePage() {
-  const user = await requireRole(["OWNER", "MANAGER"]);
+  const user = await requirePermission("manage_stock");
   
   const [suppliers, variants] = await Promise.all([
     prisma.supplier.findMany({ where: { isActive: true,

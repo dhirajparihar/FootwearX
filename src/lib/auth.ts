@@ -2,10 +2,40 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { hashPassword, verifyPassword } from "@/lib/password";
 
 const COOKIE = "footwear_session";
 const DAYS = 7;
+
+export type UserRoleName = "OWNER" | "MANAGER" | "STAFF";
+export type Permission =
+  | "sell"
+  | "manage_products"
+  | "manage_stock"
+  | "view_reports"
+  | "manage_customers"
+  | "manage_users"
+  | "manage_settings";
+
+const ROLE_PERMISSIONS: Record<UserRoleName, Permission[]> = {
+  OWNER: [
+    "sell",
+    "manage_products",
+    "manage_stock",
+    "view_reports",
+    "manage_customers",
+    "manage_users",
+    "manage_settings",
+  ],
+  MANAGER: [
+    "sell",
+    "manage_products",
+    "manage_stock",
+    "view_reports",
+    "manage_customers",
+    "manage_settings",
+  ],
+  STAFF: ["sell", "manage_customers"],
+};
 
 function hash(value: string) { return crypto.createHash("sha256").update(value).digest("hex"); }
 export async function createSession(userId: string) {
@@ -33,7 +63,30 @@ export async function requireUser() {
   if (!user) redirect("/login");
   return user;
 }
-export async function requireRole(roles: Array<"OWNER" | "MANAGER" | "STAFF">) {
+
+export function hasPermission(user: { role: UserRoleName }, permission: Permission) {
+  return ROLE_PERMISSIONS[user.role]?.includes(permission) ?? false;
+}
+
+export async function requirePermission(permission: Permission | Permission[]) {
+  const user = await requireUser();
+  const permissions = Array.isArray(permission) ? permission : [permission];
+  if (!permissions.every((entry) => hasPermission(user, entry))) {
+    redirect("/dashboard");
+  }
+  return user;
+}
+
+export async function requireAnyPermission(permission: Permission | Permission[]) {
+  const user = await requireUser();
+  const permissions = Array.isArray(permission) ? permission : [permission];
+  if (!permissions.some((entry) => hasPermission(user, entry))) {
+    redirect("/dashboard");
+  }
+  return user;
+}
+
+export async function requireRole(roles: Array<UserRoleName>) {
   const user = await requireUser();
   if (!roles.includes(user.role)) redirect("/dashboard");
   return user;

@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { createSale } from "@/services/inventory";
-import { requireRole } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const saleSchema = z.object({
   items: z.array(z.object({
@@ -23,7 +23,7 @@ const saleSchema = z.object({
 
 export async function completeSale(input: unknown) {
   try {
-    const user = await requireRole(["OWNER", "MANAGER", "STAFF"]);
+    const user = await requirePermission("sell");
     const data = saleSchema.parse(input);
     const sale = await createSale({ ...data, userId: user.id, shopId: user.shopId });
 
