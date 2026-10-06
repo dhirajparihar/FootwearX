@@ -111,7 +111,7 @@ export default async function DashboardPage() {
             </Button>
             <div className="flex gap-3">
               <Button asChild variant="outline" className="flex-1">
-                <Link href="/purchases/new">Receive Purchase</Link>
+                <Link href="/sales/daily">Day Closing</Link>
               </Button>
               <Button asChild variant="outline" className="flex-1">
                 <Link href="/products/new">Add Product</Link>

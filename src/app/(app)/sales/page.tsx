@@ -27,12 +27,17 @@ export default async function SalesPage() {
           <h1 className="text-3xl font-bold tracking-tight">Sales</h1>
           <p className="text-muted-foreground mt-1">Invoices, payments and returns.</p>
         </div>
-        <Button asChild>
-          <Link href="/pos">
-            <Plus className="h-4 w-4 mr-2" />
-            New Sale (POS)
-          </Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button asChild variant="outline">
+            <Link href="/sales/daily">Day Closing</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/pos">
+              <Plus className="h-4 w-4 mr-2" />
+              New Sale (POS)
+            </Link>
+          </Button>
+        </div>
       </div>
       
       <Card>
