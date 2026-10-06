@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export default async function ReportsPage() {
   const [sales, returns, expensesAgg, stock] = await Promise.all([
@@ -70,100 +72,131 @@ export default async function ReportsPage() {
   const deadStock = stock.filter(x => x.currentStock > 0).sort((a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()).slice(0, 5);
 
   return (
-    <div className="content">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div className="space-y-6 pb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 style={{ marginBottom: "4px" }}>Business Reports</h1>
-          <p className="muted">Overall financial performance and sales insights.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Business Reports</h1>
+          <p className="text-muted-foreground mt-1">Overall financial performance and sales insights.</p>
         </div>
-        <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "10px 16px", borderRadius: "10px", color: "#15803d" }}>
-          <div style={{ fontSize: "12px", fontWeight: "bold", textTransform: "uppercase" }}>Net Profit</div>
-          <div style={{ fontSize: "24px", fontWeight: "bold" }}>₹{netProfit.toLocaleString("en-IN")}</div>
+        <div className={`px-5 py-3 rounded-xl border flex flex-col items-end shadow-sm ${
+          netProfit >= 0 ? "bg-success/10 border-success/30 text-success" : "bg-destructive/10 border-destructive/30 text-destructive"
+        }`}>
+          <div className="text-xs font-bold uppercase tracking-wider">Net Profit</div>
+          <div className="text-2xl font-bold">₹{netProfit.toLocaleString("en-IN")}</div>
         </div>
       </div>
 
-      <div className="grid grid-2" style={{ marginTop: 24 }}>
-        <div className="card" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          <h3 style={{ margin: 0, borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>Profit & Loss</h3>
-          
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span className="muted">Gross Sales</span>
-            <strong>₹{grossSales.toLocaleString("en-IN")}</strong>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span className="muted">Discounts</span>
-            <strong style={{ color: "var(--danger)" }}>- ₹{totalDiscount.toLocaleString("en-IN")}</strong>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span className="muted">Customer Returns</span>
-            <strong style={{ color: "var(--danger)" }}>- ₹{returnAmount.toLocaleString("en-IN")}</strong>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "8px", borderBottom: "1px solid var(--border)" }}>
-            <span className="muted">Purchase Cost (COGS)</span>
-            <strong style={{ color: "var(--danger)" }}>- ₹{netCogs.toLocaleString("en-IN")}</strong>
-          </div>
-          
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "16px" }}>
-            <strong>Gross Profit</strong>
-            <strong>₹{grossProfit.toLocaleString("en-IN")}</strong>
-          </div>
-          
-          <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "8px", borderBottom: "1px solid var(--border)" }}>
-            <span className="muted">Shop Expenses</span>
-            <strong style={{ color: "var(--danger)" }}>- ₹{totalExpenses.toLocaleString("en-IN")}</strong>
-          </div>
-          
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px", color: netProfit >= 0 ? "var(--success)" : "var(--danger)" }}>
-            <strong>Net Profit</strong>
-            <strong>₹{netProfit.toLocaleString("en-IN")}</strong>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Profit & Loss</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Gross Sales</span>
+              <span className="font-semibold">₹{grossSales.toLocaleString("en-IN")}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Discounts</span>
+              <span className="font-medium text-destructive">- ₹{totalDiscount.toLocaleString("en-IN")}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Customer Returns</span>
+              <span className="font-medium text-destructive">- ₹{returnAmount.toLocaleString("en-IN")}</span>
+            </div>
+            
+            <Separator />
+            
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Purchase Cost (COGS)</span>
+              <span className="font-medium text-destructive">- ₹{netCogs.toLocaleString("en-IN")}</span>
+            </div>
+            
+            <div className="flex justify-between items-center text-base font-semibold pt-2">
+              <span>Gross Profit</span>
+              <span>₹{grossProfit.toLocaleString("en-IN")}</span>
+            </div>
+            
+            <Separator />
+            
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Shop Expenses</span>
+              <span className="font-medium text-destructive">- ₹{totalExpenses.toLocaleString("en-IN")}</span>
+            </div>
+            
+            <div className={`flex justify-between items-center text-lg font-bold pt-2 ${netProfit >= 0 ? "text-success" : "text-destructive"}`}>
+              <span>Net Profit</span>
+              <span>₹{netProfit.toLocaleString("en-IN")}</span>
+            </div>
+          </CardContent>
+        </Card>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div className="card">
-            <h3 style={{ margin: "0 0 12px 0" }}>Best Selling Products</h3>
-            {topProducts.map((p, i) => (
-              <div key={p.name} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i !== topProducts.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-                <span>{p.name}</span>
-                <strong>{p.qty} sold</strong>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Best Selling Products</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {topProducts.map((p, i) => (
+                  <div key={p.name} className="flex justify-between items-center text-sm">
+                    <span className="font-medium">{p.name}</span>
+                    <span className="text-muted-foreground font-semibold bg-muted px-2 py-0.5 rounded-md">{p.qty} sold</span>
+                  </div>
+                ))}
+                {topProducts.length === 0 && <span className="text-sm text-muted-foreground italic">No sales yet.</span>}
               </div>
-            ))}
-            {topProducts.length === 0 && <span className="muted">No sales yet.</span>}
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="card">
-            <h3 style={{ margin: "0 0 12px 0" }}>Fast Moving Sizes</h3>
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-              {topSizes.map(s => (
-                <div key={s.size} style={{ background: "#f9fafb", border: "1px solid var(--border)", padding: "8px 12px", borderRadius: "8px", textAlign: "center" }}>
-                  <div style={{ fontSize: "16px", fontWeight: "bold" }}>Size {s.size}</div>
-                  <div className="muted" style={{ fontSize: "12px" }}>{s.qty} pairs</div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Fast Moving Sizes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3 flex-wrap">
+                {topSizes.map(s => (
+                  <div key={s.size} className="bg-muted border border-border px-4 py-2 rounded-xl text-center flex-1 min-w-[80px]">
+                    <div className="text-lg font-bold">{s.size}</div>
+                    <div className="text-xs text-muted-foreground font-medium">{s.qty} pairs</div>
+                  </div>
+                ))}
+                {topSizes.length === 0 && <span className="text-sm text-muted-foreground italic">No sales yet.</span>}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-primary/5 border-primary/20">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Total Stock Worth</CardTitle>
+              <div className="text-2xl font-bold text-primary">₹{stockValue.toLocaleString("en-IN")}</div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Total money currently locked in shop inventory (based on cost price).</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Dead Stock <span className="text-muted-foreground font-normal text-sm ml-2">(Oldest sitting pairs)</span></CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {deadStock.map((s, i) => (
+                <div key={s.id} className="flex justify-between items-center text-sm">
+                  <span>{s.product.brand.name} {s.product.name} (Size {s.size})</span>
+                  <span className="text-muted-foreground font-medium">{s.currentStock} pairs</span>
                 </div>
               ))}
-              {topSizes.length === 0 && <span className="muted">No sales yet.</span>}
+              {deadStock.length === 0 && <span className="text-sm text-muted-foreground italic">No dead stock found.</span>}
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-2" style={{ marginTop: 24 }}>
-        <div className="card">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-            <h3 style={{ margin: 0 }}>Stock Worth</h3>
-            <strong style={{ fontSize: "20px" }}>₹{stockValue.toLocaleString("en-IN")}</strong>
-          </div>
-          <p className="muted" style={{ margin: 0, fontSize: "14px" }}>Total money currently locked in shop inventory (based on cost price).</p>
-        </div>
-
-        <div className="card">
-          <h3 style={{ margin: "0 0 12px 0" }}>Dead Stock (Oldest sitting pairs)</h3>
-          {deadStock.map((s, i) => (
-            <div key={s.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i !== deadStock.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-              <span>{s.product.brand.name} {s.product.name} (Size {s.size})</span>
-              <strong className="muted">{s.currentStock} pairs</strong>
-            </div>
-          ))}
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

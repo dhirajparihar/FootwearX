@@ -1,4 +1,104 @@
-import {prisma} from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import {createCustomer} from "@/app/actions/master-data";
-export default async function CustomersPage(){const customers=await prisma.customer.findMany({orderBy:{name:"asc"},take:300});return <div className="content"><div className="row"><div><h1>Customers</h1><p className="muted">Customer records for invoices and returns.</p></div></div><div className="grid grid-2" style={{marginTop:18}}><form action={createCustomer} className="card"><h2>Add customer</h2><div className="form-grid"><div className="field"><label>Name</label><input className="input" name="name" required/></div><div className="field"><label>Phone</label><input className="input" name="phone"/></div><div className="field"><label>Email</label><input className="input" name="email" type="email"/></div><div className="field"><label>Address</label><input className="input" name="address"/></div></div><button className="btn btn-primary" style={{marginTop:14}}>Save customer</button></form><div className="card"><div className="table-wrap"><table><thead><tr><th>Name</th><th>Phone</th><th>Email</th></tr></thead><tbody>{customers.map(c=><tr key={c.id}><td><Link href={`/customers/${c.id}`}>{c.name}</Link></td><td>{c.phone??"—"}</td><td>{c.email??"—"}</td></tr>)}</tbody></table></div></div></div></div>}
+import { createCustomer } from "@/app/actions/master-data";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+export default async function CustomersPage() {
+  const customers = await prisma.customer.findMany({
+    orderBy: { name: "asc" },
+    take: 300
+  });
+
+  return (
+    <div className="space-y-6 pb-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
+        <p className="text-muted-foreground mt-1">Customer records for invoices and returns.</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Add Customer</CardTitle>
+              <CardDescription>Create a new customer profile.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={createCustomer} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" name="name" required placeholder="John Doe" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input id="phone" name="phone" placeholder="9876543210" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" name="email" type="email" placeholder="john@example.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input id="address" name="address" placeholder="123 Main St, City" />
+                </div>
+                <Button type="submit" className="w-full">Save Customer</Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Directory</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-muted/50">
+                    <TableRow>
+                      <TableHead className="font-semibold">Name</TableHead>
+                      <TableHead className="font-semibold">Phone</TableHead>
+                      <TableHead className="font-semibold">Email</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customers.map(c => (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-medium">
+                          <Link href={`/customers/${c.id}`} className="text-primary hover:underline">
+                            {c.name}
+                          </Link>
+                        </TableCell>
+                        <TableCell>{c.phone || <span className="text-muted-foreground italic">—</span>}</TableCell>
+                        <TableCell>{c.email || <span className="text-muted-foreground italic">—</span>}</TableCell>
+                      </TableRow>
+                    ))}
+                    {customers.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                          No customers found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

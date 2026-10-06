@@ -1,6 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { format } from "date-fns";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ReceiptIndianRupee } from "lucide-react";
 
 export default async function UdhaarPage() {
   const sales = await prisma.sale.findMany({
@@ -23,74 +35,89 @@ export default async function UdhaarPage() {
   let totalDue = 0;
 
   return (
-    <div className="content">
-      <div className="row">
-        <div>
-          <h1 style={{ marginBottom: "4px" }}>Customer Udhaar</h1>
-          <p className="muted">Track pending customer payments and due dates.</p>
-        </div>
+    <div className="space-y-6 pb-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Customer Udhaar</h1>
+        <p className="text-muted-foreground mt-1">Track pending customer payments and due dates.</p>
       </div>
 
-      <div className="card" style={{ marginTop: "16px" }}>
-        {activeCredits.length === 0 ? (
-          <p className="muted">No pending customer payments.</p>
-        ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Customer</th>
-                  <th>Invoice</th>
-                  <th>Bill Total</th>
-                  <th>Paid</th>
-                  <th>Balance Due</th>
-                  <th>Due Date</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activeCredits.map(sale => {
-                  const total = Number(sale.total);
-                  const paid = sale.payments.reduce((sum, p) => sum + Number(p.amount), 0);
-                  const due = total - paid;
-                  totalDue += due;
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="font-semibold">Customer</TableHead>
+                  <TableHead className="font-semibold">Invoice</TableHead>
+                  <TableHead className="font-semibold text-right">Bill Total</TableHead>
+                  <TableHead className="font-semibold text-right">Paid</TableHead>
+                  <TableHead className="font-semibold text-right text-destructive">Balance Due</TableHead>
+                  <TableHead className="font-semibold text-center">Due Date</TableHead>
+                  <TableHead className="font-semibold text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activeCredits.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                      No pending customer payments.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  activeCredits.map(sale => {
+                    const total = Number(sale.total);
+                    const paid = sale.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+                    const due = total - paid;
+                    totalDue += due;
 
-                  const isOverdue = sale.dueDate && sale.dueDate < new Date();
+                    const isOverdue = sale.dueDate && sale.dueDate < new Date();
 
-                  return (
-                    <tr key={sale.id}>
-                      <td>
-                        <strong>{sale.customer?.name}</strong><br />
-                        <span className="muted" style={{ fontSize: "12px" }}>{sale.customer?.phone}</span>
-                      </td>
-                      <td>
-                        <Link href={`/sales/${sale.id}`}>{sale.invoiceNumber}</Link>
-                      </td>
-                      <td>₹{total.toLocaleString("en-IN")}</td>
-                      <td>₹{paid.toLocaleString("en-IN")}</td>
-                      <td style={{ color: "var(--danger)", fontWeight: "bold" }}>₹{due.toLocaleString("en-IN")}</td>
-                      <td>
-                        <span className={isOverdue ? "badge badge-danger" : "badge badge-ok"}>
-                          {sale.dueDate ? format(sale.dueDate, "dd MMM yyyy") : "N/A"}
-                        </span>
-                      </td>
-                      <td>
-                        <Link href={`/sales/${sale.id}`} className="btn">Collect</Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <TableRow key={sale.id}>
+                        <TableCell>
+                          <div className="font-semibold">{sale.customer?.name}</div>
+                          <div className="text-xs text-muted-foreground">{sale.customer?.phone}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Link href={`/sales/${sale.id}`} className="text-primary hover:underline">
+                            {sale.invoiceNumber}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-right">₹{total.toLocaleString("en-IN")}</TableCell>
+                        <TableCell className="text-right">₹{paid.toLocaleString("en-IN")}</TableCell>
+                        <TableCell className="text-right font-bold text-destructive">₹{due.toLocaleString("en-IN")}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={isOverdue ? "destructive" : "secondary"}>
+                            {sale.dueDate ? format(sale.dueDate, "dd MMM yyyy") : "N/A"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button asChild size="sm">
+                            <Link href={`/sales/${sale.id}`}>Collect</Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
 
       {activeCredits.length > 0 && (
-        <div style={{ marginTop: "16px", padding: "16px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "18px", color: "#991b1b" }}>Total Udhaar Pending in Market</span>
-          <strong style={{ fontSize: "24px", color: "#991b1b" }}>₹{totalDue.toLocaleString("en-IN")}</strong>
-        </div>
+        <Card className="bg-destructive/5 border-destructive/20 shadow-sm">
+          <CardContent className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-3">
+              <ReceiptIndianRupee className="h-8 w-8 text-destructive" />
+              <div className="text-lg font-semibold text-destructive">Total Udhaar Pending in Market</div>
+            </div>
+            <div className="text-3xl font-bold tracking-tight text-destructive">
+              ₹{totalDue.toLocaleString("en-IN")}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
