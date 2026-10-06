@@ -10,6 +10,7 @@ export async function adjustStock(input: {
   variantId: string;
   delta: number;
   userId: string;
+  shopId: string;
   note?: string;
 }) {
   if (!Number.isInteger(input.delta) || input.delta === 0) {
@@ -33,6 +34,7 @@ export async function adjustStock(input: {
     const updated = await tx.productVariant.updateMany({
       where: {
         id: variant.id,
+        product: { shopId: input.shopId },
         ...(input.delta < 0 ? { currentStock: { gte: Math.abs(input.delta) } } : {}),
       },
       data: { currentStock: { increment: input.delta } },
@@ -44,6 +46,7 @@ export async function adjustStock(input: {
 
     const movement = await tx.stockMovement.create({
       data: {
+        shopId: input.shopId,
         variantId: variant.id,
         type: input.delta > 0 ? "ADJUSTMENT_IN" : "ADJUSTMENT_OUT",
         quantity: input.delta,
@@ -71,6 +74,7 @@ export async function damageStock(input: {
   quantity: number;
   note?: string;
   userId: string;
+  shopId: string;
 }) {
   if (!Number.isInteger(input.quantity) || input.quantity <= 0) {
     throw new Error("Damage quantity must be a positive integer.");
@@ -87,7 +91,7 @@ export async function damageStock(input: {
     }
 
     const updated = await tx.productVariant.updateMany({
-      where: { id: input.variantId, currentStock: { gte: input.quantity } },
+      where: { id: input.variantId, product: { shopId: input.shopId }, currentStock: { gte: input.quantity } },
       data: { currentStock: { decrement: input.quantity } },
     });
 
@@ -97,6 +101,7 @@ export async function damageStock(input: {
 
     return tx.stockMovement.create({
       data: {
+        shopId: input.shopId,
         variantId: input.variantId,
         type: "DAMAGE",
         quantity: -input.quantity,
@@ -112,6 +117,7 @@ export async function receivePurchase(input: {
   supplierId: string;
   invoiceNumber: string;
   userId: string;
+  shopId: string;
   items: Array<{ variantId: string; quantity: number; unitCost: number }>;
   discount?: number;
   tax?: number;
@@ -156,6 +162,7 @@ export async function receivePurchase(input: {
 
     const purchase = await tx.purchase.create({
       data: {
+        shopId: input.shopId,
         supplierId: input.supplierId,
         createdBy: input.userId,
         invoiceNumber: input.invoiceNumber,
@@ -200,6 +207,7 @@ export async function receivePurchase(input: {
 
       await tx.stockMovement.create({
         data: {
+          shopId: input.shopId,
           variantId: item.variantId,
           type: "PURCHASE",
           quantity: item.quantity,
@@ -226,6 +234,7 @@ export async function receivePurchase(input: {
 export async function createSale(input: {
   customerId?: string;
   userId: string;
+  shopId: string;
   items: Array<{ variantId: string; quantity: number; unitPrice: number }>;
   payments: Array<{
     method: "CASH" | "UPI" | "CARD" | "OTHER";
@@ -262,7 +271,7 @@ export async function createSale(input: {
       }
 
       const updated = await tx.productVariant.updateMany({
-        where: { id: item.variantId, isActive: true, currentStock: { gte: item.quantity } },
+        where: { id: item.variantId, product: { shopId: input.shopId }, isActive: true, currentStock: { gte: item.quantity } },
         data: { currentStock: { decrement: item.quantity } },
       });
 
@@ -293,10 +302,10 @@ export async function createSale(input: {
 
     if (input.customerId) {
       const customer = await tx.customer.findUnique({ where: { id: input.customerId } });
-      if (!customer) throw new Error("Customer not found.");
+      if (!customer || customer.shopId !== input.shopId) throw new Error("Customer not found.");
     }
 
-    const settings = await tx.shopSettings.findFirst();
+    const settings = await tx.shopSettings.findFirst({ where: { shopId: input.shopId } });
     if (!settings) throw new Error("Shop settings not configured.");
 
     const updatedSettings = await tx.shopSettings.update({
@@ -308,6 +317,7 @@ export async function createSale(input: {
 
     const sale = await tx.sale.create({
       data: {
+        shopId: input.shopId,
         invoiceNumber,
         customerId: input.customerId,
         createdBy: input.userId,
@@ -335,6 +345,7 @@ export async function createSale(input: {
 
       await tx.stockMovement.create({
         data: {
+          shopId: input.shopId,
           variantId: item.variantId,
           type: "SALE",
           quantity: -item.quantity,
@@ -372,6 +383,7 @@ export async function createSale(input: {
 export async function returnSale(input: {
   saleId: string;
   userId: string;
+  shopId: string;
   items: Array<{ saleItemId: string; quantity: number }>;
   reason?: string;
 }) {
@@ -383,13 +395,14 @@ export async function returnSale(input: {
       include: { items: true },
     });
 
-    if (!sale || sale.status !== "COMPLETED") {
+    if (!sale || sale.shopId !== input.shopId || sale.status !== "COMPLETED") {
       throw new Error("Sale record not found.");
     }
 
     let refund = 0;
     const saleReturn = await tx.saleReturn.create({
       data: {
+        shopId: input.shopId,
         saleId: sale.id,
         createdBy: input.userId,
         reason: input.reason,
@@ -431,6 +444,7 @@ export async function returnSale(input: {
 
       await tx.stockMovement.create({
         data: {
+          shopId: input.shopId,
           variantId: item.variantId,
           type: "SALE_RETURN",
           quantity: itemInput.quantity,
@@ -462,6 +476,7 @@ export async function returnSale(input: {
 export async function returnPurchase(input: {
   purchaseId: string;
   userId: string;
+  shopId: string;
   items: Array<{ purchaseItemId: string; quantity: number }>;
   reason?: string;
 }) {
@@ -473,13 +488,14 @@ export async function returnPurchase(input: {
       include: { items: true },
     });
 
-    if (!purchase || purchase.status !== "COMPLETED") {
+    if (!purchase || purchase.shopId !== input.shopId || purchase.status !== "COMPLETED") {
       throw new Error("Purchase order not found.");
     }
 
     let refund = 0;
     const purchaseReturn = await tx.purchaseReturn.create({
       data: {
+        shopId: input.shopId,
         purchaseId: purchase.id,
         createdBy: input.userId,
         reason: input.reason,
@@ -524,6 +540,7 @@ export async function returnPurchase(input: {
 
       await tx.stockMovement.create({
         data: {
+          shopId: input.shopId,
           variantId: item.variantId,
           type: "PURCHASE_RETURN",
           quantity: -itemInput.quantity,

@@ -37,7 +37,6 @@ export function PurchaseForm({ suppliers, variants }: { suppliers: { id: string;
         await createPurchase({
           supplierId,
           invoiceNumber: invoice,
-          userId: "", // Typically comes from auth context, or server action will handle it
           items: rows,
           amountPaid: paid,
           paymentMethod,

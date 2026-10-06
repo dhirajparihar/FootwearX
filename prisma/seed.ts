@@ -49,15 +49,15 @@ async function main() {
   });
 
   const brand = await prisma.brand.upsert({
-    where: { name: "Nike" },
+    where: { shopId_name: { shopId: shop.id, name: "Nike" } },
     update: {},
-    create: { name: "Nike" }
+    create: { shopId: shop.id, name: "Nike" }
   });
 
   const category = await prisma.category.upsert({
-    where: { name: "Sports Shoes" },
+    where: { shopId_name: { shopId: shop.id, name: "Sports Shoes" } },
     update: {},
-    create: { name: "Sports Shoes" }
+    create: { shopId: shop.id, name: "Sports Shoes" }
   });
 
   const product = await prisma.product.upsert({
@@ -65,6 +65,7 @@ async function main() {
     update: {},
     create: {
       id: "00000000-0000-0000-0000-000000000010",
+      shopId: shop.id,
       brandId: brand.id,
       categoryId: category.id,
       name: "Air Max Demo",
@@ -95,6 +96,7 @@ async function main() {
     update: {},
     create: {
       id: "00000000-0000-0000-0000-000000000020",
+      shopId: shop.id,
       name: "Demo Supplier",
       phone: "9999999999"
     }

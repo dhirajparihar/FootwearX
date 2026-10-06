@@ -4,78 +4,77 @@
 
 @layer base {
   :root {
-    /* Pure, clean elegant light theme */
-    --background: 0 0% 98%; /* Very light gray/white */
-    --foreground: 240 10% 12%; /* Crisp almost-black */
+    /* Premium Minimalist Retail Theme */
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
     
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 12%;
+    --card-foreground: 224 71.4% 4.1%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 12%;
+    --popover-foreground: 224 71.4% 4.1%;
     
-    /* Elegant, crisp retail green */
-    --primary: 158 60% 30%;
+    /* Elegant deeply saturated primary (e.g. sleek emerald/slate) */
+    --primary: 160 50% 25%;
     --primary-foreground: 0 0% 100%;
     
-    /* Clean secondary */
-    --secondary: 240 5% 94%; 
-    --secondary-foreground: 240 10% 12%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
     
-    /* Muted colors for backgrounds and subtle text */
-    --muted: 240 5% 94%;
-    --muted-foreground: 240 5% 45%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
     
-    --accent: 240 5% 94%;
-    --accent-foreground: 240 10% 12%;
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
     
-    --success: 142 76% 36%;
+    --success: 152 69% 31%;
     --success-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
     
-    /* Ultra-subtle borders */
-    --border: 240 5% 90%;
-    --input: 240 5% 90%;
-    --ring: 158 60% 30%;
+    /* Whisper-thin borders */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 160 50% 25%;
     
-    /* Elegant radius */
-    --radius: 0.6rem; 
+    /* Rounded but sharp enough to feel professional */
+    --radius: 0.75rem; 
   }
  
   .dark {
-    /* Refined dark mode */
-    --background: 240 10% 5%;
-    --foreground: 0 0% 98%;
+    /* Luxurious deep dark mode (not pure black) */
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
     
-    --card: 240 10% 7%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 40% 6%;
+    --card-foreground: 210 20% 98%;
     
-    --popover: 240 10% 7%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 40% 6%;
+    --popover-foreground: 210 20% 98%;
     
-    --primary: 158 50% 45%;
+    /* Brighter primary for contrast */
+    --primary: 160 55% 45%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 240 10% 12%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
     
-    --muted: 240 10% 12%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
     
-    --accent: 240 10% 12%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
     
-    --success: 142 70% 45%;
+    --success: 152 69% 40%;
     --success-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
     
-    --border: 240 10% 15%;
-    --input: 240 10% 15%;
-    --ring: 158 50% 45%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 160 55% 45%;
   }
 }
 

@@ -2,9 +2,9 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { completeSale } from "@/app/actions/sales";
-import { ProductPicker } from "./pos/product-picker";
-import { BillCart } from "./pos/bill-cart";
-import { PaymentSheet } from "./pos/payment-sheet";
+import { ProductPicker } from "@/components/pos/product-picker";
+import { BillCart } from "@/components/pos/bill-cart";
+import { PaymentSheet } from "@/components/pos/payment-sheet";
 import { toast } from "sonner";
 
 export type Variant = { id: string; sku: string; barcode: string; name: string; size: string; color: string; stock: number; price: number };

@@ -5,7 +5,9 @@ import { requireUser } from "@/lib/auth";
 export default async function POSPage() {
   const user = await requireUser();
   const variants = await prisma.productVariant.findMany({
-    where: { isActive: true, currentStock: { gt: 0 } },
+    where: { isActive: true, currentStock: { gt: 0 },
+        product: { is: { shopId: user.shopId } }
+    },
     include: { product: { include: { brand: true } } },
     orderBy: { product: { name: "asc" } },
     take: 500
@@ -13,8 +15,9 @@ export default async function POSPage() {
 
   const customers = await prisma.customer.findMany({
     orderBy: { name: "asc" },
-    take: 100
-  });
+    take: 100,
+      where: { shopId: user.shopId }
+});
 
   return (
     <div className="content" style={{ padding: "10px" }}>

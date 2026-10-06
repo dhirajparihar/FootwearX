@@ -15,11 +15,12 @@ const contactSchema = z.object({
 });
 
 export async function createCustomer(formData: FormData) {
-  await requireRole(["OWNER", "MANAGER", "STAFF"]);
+  const user = await requireRole(["OWNER", "MANAGER", "STAFF"]);
   const data = contactSchema.parse(Object.fromEntries(formData.entries()));
 
   await prisma.customer.create({
     data: {
+      shopId: user.shopId,
       name: data.name,
       phone: data.phone || undefined,
       email: data.email || undefined,
@@ -31,11 +32,12 @@ export async function createCustomer(formData: FormData) {
 }
 
 export async function createSupplier(formData: FormData) {
-  await requireRole(["OWNER", "MANAGER"]);
+  const user = await requireRole(["OWNER", "MANAGER"]);
   const data = contactSchema.parse(Object.fromEntries(formData.entries()));
 
   await prisma.supplier.create({
     data: {
+      shopId: user.shopId,
       name: data.name,
       phone: data.phone || undefined,
       email: data.email || undefined,

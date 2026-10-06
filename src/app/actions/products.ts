@@ -56,6 +56,7 @@ export async function createProduct(formData: FormData) {
   await prisma.$transaction(async (tx) => {
     const product = await tx.product.create({
       data: {
+        shopId: user.shopId,
         name: data.name,
         modelCode: data.modelCode || undefined,
         brandId: data.brandId,
@@ -82,6 +83,7 @@ export async function createProduct(formData: FormData) {
     if (data.openingStock > 0) {
       await tx.stockMovement.create({
         data: {
+          shopId: user.shopId,
           variantId: variant.id,
           type: "ADJUSTMENT_IN",
           quantity: data.openingStock,
@@ -112,6 +114,7 @@ export async function createBatchProduct(input: unknown) {
     const result = await prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
         data: {
+          shopId: user.shopId,
           name: data.name,
           modelCode: data.modelCode || undefined,
           brandId: data.brandId,
@@ -139,6 +142,7 @@ export async function createBatchProduct(input: unknown) {
         if (vData.openingStock > 0) {
           await tx.stockMovement.create({
             data: {
+              shopId: user.shopId,
               variantId: variant.id,
               type: "ADJUSTMENT_IN",
               quantity: vData.openingStock,
@@ -185,8 +189,8 @@ export async function updateProductDetails(formData: FormData) {
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.product.update({
-      where: { id: productId },
+    const product = await tx.product.updateMany({
+      where: { id: productId, shopId: user.shopId },
       data: {
         name,
         modelCode: modelCode || null,
@@ -224,8 +228,8 @@ export async function updateVariant(input: {
     const user = await requireRole(["OWNER", "MANAGER"]);
 
     await prisma.$transaction(async (tx) => {
-      const current = await tx.productVariant.findUnique({
-        where: { id: input.variantId },
+      const current = await tx.productVariant.findFirst({
+        where: { id: input.variantId, product: { shopId: user.shopId } },
       });
       if (!current) throw new Error("Variant not found.");
 
@@ -279,7 +283,7 @@ export async function addVariantToProduct(input: {
     const user = await requireRole(["OWNER", "MANAGER"]);
 
     await prisma.$transaction(async (tx) => {
-      const product = await tx.product.findUnique({ where: { id: input.productId } });
+      const product = await tx.product.findFirst({ where: { id: input.productId, shopId: user.shopId } });
       if (!product) throw new Error("Product not found.");
 
       const variant = await tx.productVariant.create({
@@ -300,6 +304,7 @@ export async function addVariantToProduct(input: {
       if (input.openingStock > 0) {
         await tx.stockMovement.create({
           data: {
+            shopId: user.shopId,
             variantId: variant.id,
             type: "ADJUSTMENT_IN",
             quantity: input.openingStock,

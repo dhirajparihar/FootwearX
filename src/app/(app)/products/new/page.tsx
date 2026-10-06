@@ -1,10 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import { SizeMatrixForm } from "@/components/products/size-matrix-form";
+import { requireUser } from "@/lib/auth";
 
 export default async function NewProductPage() {
+    const user = await requireUser();
   const [brands, categories] = await Promise.all([
-    prisma.brand.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
-    prisma.category.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
+    prisma.brand.findMany({ where: { isActive: true,
+        shopId: user.shopId
+    }, orderBy: { name: "asc" } }),
+    prisma.category.findMany({ where: { isActive: true,
+        shopId: user.shopId
+    }, orderBy: { name: "asc" } }),
   ]);
 
   return (

@@ -4,10 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle2, AlertTriangle, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { requireUser } from "@/lib/auth";
 
 export default async function InventoryPage() {
+    const user = await requireUser();
   const products = await prisma.product.findMany({
-    where: { isActive: true },
+    where: { isActive: true,
+        shopId: user.shopId
+    },
     include: { 
       brand: true,
       variants: {

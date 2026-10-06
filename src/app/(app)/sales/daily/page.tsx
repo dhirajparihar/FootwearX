@@ -7,8 +7,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { PrintButton } from "@/components/ui/print-button";
+import { requireUser } from "@/lib/auth";
 
 export default async function DailySalesPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
+    const user = await requireUser();
   const params = await searchParams;
   const dateParam = params.date;
   
@@ -30,16 +32,22 @@ export default async function DailySalesPage({ searchParams }: { searchParams: P
 
   const [sales, returns, payments] = await Promise.all([
     prisma.sale.findMany({
-      where: { saleDate: { gte: start, lte: end }, status: "COMPLETED" },
+      where: { saleDate: { gte: start, lte: end }, status: "COMPLETED",
+          shopId: user.shopId
+    },
       include: { 
         items: { include: { variant: { include: { product: true } } } } 
       }
     }),
     prisma.saleReturn.findMany({
-      where: { createdAt: { gte: start, lte: end } }
+      where: { createdAt: { gte: start, lte: end },
+          shopId: user.shopId
+    }
     }),
     prisma.payment.findMany({
-      where: { paidAt: { gte: start, lte: end } }
+      where: { paidAt: { gte: start, lte: end },
+          sale: { is: { shopId: user.shopId } }
+    }
     })
   ]);
 

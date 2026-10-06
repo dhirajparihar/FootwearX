@@ -25,7 +25,7 @@ export async function completeSale(input: unknown) {
   try {
     const user = await requireRole(["OWNER", "MANAGER", "STAFF"]);
     const data = saleSchema.parse(input);
-    const sale = await createSale({ ...data, userId: user.id });
+    const sale = await createSale({ ...data, userId: user.id, shopId: user.shopId });
 
     return { ok: true as const, invoiceNumber: sale.invoiceNumber, saleId: sale.id };
   } catch (error) {

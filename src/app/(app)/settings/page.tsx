@@ -19,7 +19,7 @@ import { Store, ShieldCheck, Mail, Phone, Hash } from "lucide-react";
 
 export default async function SettingsPage() {
   const user = await requireUser();
-  const shop = await prisma.shop.findUnique({
+  const shop = await prisma.shop.findFirst({
     where: { id: user.shopId },
     include: { settings: true, users: { orderBy: { name: "asc" } } }
   });

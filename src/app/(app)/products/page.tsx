@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
+import { requireUser } from "@/lib/auth";
 
 export default async function ProductsPage() {
+    const user = await requireUser();
   const products = await prisma.product.findMany({
     include: { 
       brand: true, 
@@ -16,7 +18,8 @@ export default async function ProductsPage() {
     },
     orderBy: { updatedAt: "desc" },
     take: 100,
-  });
+      where: { shopId: user.shopId }
+});
 
   // Helper to sort sizes numerically
   products.forEach(p => {

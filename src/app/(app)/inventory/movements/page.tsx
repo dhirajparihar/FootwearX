@@ -12,13 +12,16 @@ import {
 import { ArrowLeft, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { requireUser } from "@/lib/auth";
 
 export default async function MovementsPage() {
+    const user = await requireUser();
   const rows = await prisma.stockMovement.findMany({
     include: { variant: { include: { product: true } }, user: true },
     orderBy: { createdAt: "desc" },
-    take: 300
-  });
+    take: 300,
+      where: { shopId: user.shopId }
+});
 
   return (
     <div className="space-y-6 pb-8">

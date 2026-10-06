@@ -2,12 +2,16 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
+import { requireUser } from "@/lib/auth";
 
 export default async function CustomerProfilePage({ params }: { params: Promise<{ id: string }> }) {
+    const user = await requireUser();
   const { id } = await params;
   
-  const customer = await prisma.customer.findUnique({
-    where: { id },
+  const customer = await prisma.customer.findFirst({
+    where: { id,
+        shopId: user.shopId
+    },
     include: {
       sales: {
         include: {

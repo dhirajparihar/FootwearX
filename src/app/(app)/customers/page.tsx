@@ -13,12 +13,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { requireUser } from "@/lib/auth";
 
 export default async function CustomersPage() {
+    const user = await requireUser();
   const customers = await prisma.customer.findMany({
     orderBy: { name: "asc" },
-    take: 300
-  });
+    take: 300,
+      where: { shopId: user.shopId }
+});
 
   return (
     <div className="space-y-6 pb-8">

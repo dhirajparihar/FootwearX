@@ -12,13 +12,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { requireUser } from "@/lib/auth";
 
 export default async function PurchasesPage() {
+    const user = await requireUser();
   const purchases = await prisma.purchase.findMany({
     include: { supplier: true, items: true },
     orderBy: { purchaseDate: "desc" },
-    take: 100
-  });
+    take: 100,
+      where: { shopId: user.shopId }
+});
 
   return (
     <div className="space-y-6 pb-8">

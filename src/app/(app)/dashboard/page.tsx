@@ -3,25 +3,37 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, PackageOpen, ShoppingCart, TrendingUp, AlertCircle, IndianRupee } from "lucide-react";
+import { requireUser } from "@/lib/auth";
 
 export default async function DashboardPage() {
+    const user = await requireUser();
   const start = new Date();
   start.setHours(0, 0, 0, 0);
   const end = new Date();
   
   const [products, low, sales, purchases, stock] = await Promise.all([
-    prisma.productVariant.count({ where: { isActive: true } }),
-    prisma.productVariant.count({ where: { isActive: true, currentStock: { lte: 5 } } }),
+    prisma.productVariant.count({ where: { isActive: true,
+        product: { is: { shopId: user.shopId } }
+    } }),
+    prisma.productVariant.count({ where: { isActive: true, currentStock: { lte: 5 },
+        product: { is: { shopId: user.shopId } }
+    } }),
     prisma.sale.aggregate({
       _sum: { total: true },
-      where: { saleDate: { gte: start, lte: end }, status: "COMPLETED" },
+      where: { saleDate: { gte: start, lte: end }, status: "COMPLETED",
+          shopId: user.shopId
+    },
     }),
     prisma.purchase.aggregate({
       _sum: { total: true },
-      where: { purchaseDate: { gte: start, lte: end }, status: "COMPLETED" },
+      where: { purchaseDate: { gte: start, lte: end }, status: "COMPLETED",
+          shopId: user.shopId
+    },
     }),
     prisma.productVariant.findMany({
-      where: { isActive: true },
+      where: { isActive: true,
+          product: { is: { shopId: user.shopId } }
+    },
       select: { currentStock: true, purchasePrice: true },
     }),
   ]);

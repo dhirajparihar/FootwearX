@@ -17,6 +17,7 @@ export async function adjust(formData: FormData) {
     delta: Number(formData.get("delta")),
     note: String(formData.get("note") || ""),
     userId: user.id,
+    shopId: user.shopId,
   });
   redirect("/inventory");
 }
@@ -28,21 +29,22 @@ export async function damage(formData: FormData) {
     quantity: Number(formData.get("quantity")),
     note: String(formData.get("note") || "Damage"),
     userId: user.id,
+    shopId: user.shopId,
   });
   redirect("/inventory");
 }
 
-export async function createPurchase(input: Parameters<typeof receivePurchase>[0]) {
+export async function createPurchase(input: Omit<Parameters<typeof receivePurchase>[0], "userId" | "shopId">) {
   const user = await requireRole(["OWNER", "MANAGER"]);
-  return receivePurchase({ ...input, userId: user.id });
+  return receivePurchase({ ...input, userId: user.id, shopId: user.shopId });
 }
 
-export async function createSaleReturn(input: Parameters<typeof returnSale>[0]) {
+export async function createSaleReturn(input: Omit<Parameters<typeof returnSale>[0], "userId" | "shopId">) {
   const user = await requireRole(["OWNER", "MANAGER", "STAFF"]);
-  return returnSale({ ...input, userId: user.id });
+  return returnSale({ ...input, userId: user.id, shopId: user.shopId });
 }
 
-export async function createPurchaseReturn(input: Parameters<typeof returnPurchase>[0]) {
+export async function createPurchaseReturn(input: Omit<Parameters<typeof returnPurchase>[0], "userId" | "shopId">) {
   const user = await requireRole(["OWNER", "MANAGER"]);
-  return returnPurchase({ ...input, userId: user.id });
+  return returnPurchase({ ...input, userId: user.id, shopId: user.shopId });
 }

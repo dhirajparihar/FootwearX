@@ -1,21 +1,29 @@
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { requireUser } from "@/lib/auth";
 
 export default async function ReportsPage() {
+    const user = await requireUser();
   const [sales, returns, expensesAgg, stock] = await Promise.all([
     prisma.sale.findMany({
-      where: { status: "COMPLETED" },
+      where: { status: "COMPLETED",
+          shopId: user.shopId
+    },
       include: { items: { include: { variant: { include: { product: { include: { brand: true } } } } } } }
     }),
     prisma.saleReturn.findMany({
-      include: { items: { include: { saleItem: true } } }
+      include: { items: { include: { saleItem: true } } },
+        where: { shopId: user.shopId }
     }),
     prisma.expense.aggregate({
-      _sum: { amount: true }
+      _sum: { amount: true },
+        where: { shopId: user.shopId }
     }),
     prisma.productVariant.findMany({
-      where: { isActive: true },
+      where: { isActive: true,
+          product: { is: { shopId: user.shopId } }
+    },
       include: { product: { include: { brand: true } } }
     }),
   ]);

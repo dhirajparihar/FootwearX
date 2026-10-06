@@ -7,8 +7,10 @@ import { PrintButton } from "@/components/print-button";
 export default async function SaleInvoice({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
   const { id } = await params;
-  const sale = await prisma.sale.findUnique({
-    where: { id },
+  const sale = await prisma.sale.findFirst({
+    where: { id,
+        shopId: user.shopId
+    },
     include: {
       customer: true,
       user: { include: { shop: true } },

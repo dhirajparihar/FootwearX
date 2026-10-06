@@ -2,25 +2,33 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { updateProductDetails } from "@/app/actions/products";
 import { EditProductForm } from "@/components/products/edit-product-form";
+import { requireUser } from "@/lib/auth";
 
 interface EditProductPageProps {
   params: Promise<{ id: string }>;
 }
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
+    const user = await requireUser();
   const { id } = await params;
 
   const [product, brands, categories] = await Promise.all([
-    prisma.product.findUnique({
-      where: { id },
+    prisma.product.findFirst({
+      where: { id,
+          shopId: user.shopId
+    },
       include: {
         variants: {
           orderBy: { size: "asc" },
         },
       },
     }),
-    prisma.brand.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
-    prisma.category.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
+    prisma.brand.findMany({ where: { isActive: true,
+        shopId: user.shopId
+    }, orderBy: { name: "asc" } }),
+    prisma.category.findMany({ where: { isActive: true,
+        shopId: user.shopId
+    }, orderBy: { name: "asc" } }),
   ]);
 
   if (!product) {

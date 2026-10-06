@@ -38,7 +38,7 @@ export function SaleReturnForm({ saleId, items }: { saleId: string; items: Retur
     
     start(async () => {
       try {
-        await createSaleReturn({ saleId, userId: "", items: selected, reason });
+        await createSaleReturn({ saleId, items: selected, reason });
         window.location.href = `/sales/${saleId}`;
       } catch (e) {
         alert(e instanceof Error ? e.message : "Return failed");

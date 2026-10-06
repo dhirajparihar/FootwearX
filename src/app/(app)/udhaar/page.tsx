@@ -13,12 +13,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ReceiptIndianRupee } from "lucide-react";
+import { requireUser } from "@/lib/auth";
 
 export default async function UdhaarPage() {
+    const user = await requireUser();
   const sales = await prisma.sale.findMany({
     where: { 
       status: "COMPLETED",
-      dueDate: { not: null }
+      dueDate: { not: null },
+        shopId: user.shopId
     },
     include: {
       customer: true,
