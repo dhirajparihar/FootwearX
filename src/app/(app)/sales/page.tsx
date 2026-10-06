@@ -14,28 +14,48 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { requireUser } from "@/lib/auth";
 
-export default async function SalesPage() {
-    const user = await requireUser();
-  const sales = await prisma.sale.findMany({
-    include: { customer: true, items: true, payments: true, returns: true },
-    orderBy: { saleDate: "desc" },
-    take: 100,
-      where: { shopId: user.shopId }
-});
+const PAGE_SIZE = 50;
+
+export default async function SalesPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const user = await requireUser();
+  const params = await searchParams;
+  const page = Math.max(Number(params.page ?? 1) || 1, 1);
+
+  const [sales, totalSales] = await Promise.all([
+    prisma.sale.findMany({
+      where: { shopId: user.shopId },
+      select: {
+        id: true,
+        invoiceNumber: true,
+        saleDate: true,
+        total: true,
+        customer: { select: { name: true } },
+        items: { select: { quantity: true } },
+        payments: { select: { id: true, amount: true, method: true } },
+        returns: { select: { id: true } },
+      },
+      orderBy: { saleDate: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    prisma.sale.count({ where: { shopId: user.shopId } }),
+  ]);
 
   return (
     <div className="space-y-6 pb-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Sales</h1>
-          <p className="text-muted-foreground mt-1">Invoices, payments and returns.</p>
+          <p className="text-muted-foreground mt-1">
+            {totalSales} invoices · showing {sales.length} records
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Button asChild variant="outline">
-            <Link href="/sales/daily">Day Closing</Link>
+            <Link href="/sales/daily" prefetch={false}>Day Closing</Link>
           </Button>
           <Button asChild>
-            <Link href="/pos">
+            <Link href="/pos" prefetch={false}>
               <Plus className="h-4 w-4 mr-2" />
               New Sale (POS)
             </Link>
@@ -64,7 +84,7 @@ export default async function SalesPage() {
                   return (
                     <TableRow key={s.id}>
                       <TableCell className="font-medium">
-                        <Link href={`/sales/${s.id}`} className="text-primary hover:underline">
+                        <Link href={`/sales/${s.id}`} prefetch={false} className="text-primary hover:underline">
                           {s.invoiceNumber}
                         </Link>
                       </TableCell>
@@ -84,7 +104,7 @@ export default async function SalesPage() {
                       <TableCell className="text-right font-semibold">₹{Number(s.total).toLocaleString("en-IN")}</TableCell>
                       <TableCell className="text-right">
                         <Button asChild variant="ghost" size="sm">
-                          <Link href={`/sales/${s.id}/return`}>
+                          <Link href={`/sales/${s.id}/return`} prefetch={false}>
                             <Undo2 className="h-4 w-4 mr-2 text-muted-foreground" />
                             Return
                           </Link>

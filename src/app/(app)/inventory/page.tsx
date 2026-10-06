@@ -5,51 +5,71 @@ import { ArrowRightLeft, PlusSquare } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { StockListClient } from "@/components/inventory/stock-list-client";
 
-export default async function InventoryPage() {
-  const user = await requireUser();
-  const products = await prisma.product.findMany({
-    where: { isActive: true, shopId: user.shopId },
-    include: {
-      brand: true,
-      variants: { orderBy: { size: "asc" } }
-    },
-    orderBy: { name: "asc" },
-  });
+const PAGE_SIZE = 50;
 
-  // Sort sizes numerically
-  products.forEach(p => {
-    p.variants.sort((a, b) => {
+export default async function InventoryPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const user = await requireUser();
+  const params = await searchParams;
+  const page = Math.max(Number(params.page ?? 1) || 1, 1);
+
+  const [products, totalModels] = await Promise.all([
+    prisma.product.findMany({
+      where: { isActive: true, shopId: user.shopId },
+      select: {
+        id: true,
+        name: true,
+        brand: { select: { name: true } },
+        variants: {
+          orderBy: { size: "asc" },
+          select: {
+            id: true,
+            sku: true,
+            size: true,
+            color: true,
+            currentStock: true,
+            minimumStock: true,
+          },
+        },
+      },
+      orderBy: { name: "asc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    prisma.product.count({ where: { isActive: true, shopId: user.shopId } }),
+  ]);
+
+  products.forEach((product) => {
+    product.variants.sort((a, b) => {
       const na = parseFloat(a.size), nb = parseFloat(b.size);
       if (!isNaN(na) && !isNaN(nb)) return na - nb;
       return a.size.localeCompare(b.size);
     });
   });
 
-  const totalModels = products.length;
   const lowStockCount = products.reduce(
-    (acc, p) => acc + p.variants.filter(v => v.currentStock <= v.minimumStock && v.currentStock > 0).length,
+    (acc, product) => acc + product.variants.filter((variant) => variant.currentStock <= variant.minimumStock && variant.currentStock > 0).length,
     0
   );
   const outOfStockCount = products.reduce(
-    (acc, p) => acc + p.variants.filter(v => v.currentStock === 0).length,
+    (acc, product) => acc + product.variants.filter((variant) => variant.currentStock === 0).length,
     0
   );
   const totalPairs = products.reduce(
-    (acc, p) => acc + p.variants.reduce((s, v) => s + v.currentStock, 0),
+    (acc, product) => acc + product.variants.reduce((sum, variant) => sum + variant.currentStock, 0),
     0
   );
 
-  const serialized = products.map(p => ({
-    id: p.id,
-    name: p.name,
-    brand: p.brand.name,
-    variants: p.variants.map(v => ({
-      id: v.id,
-      sku: v.sku,
-      size: v.size,
-      color: v.color,
-      stock: v.currentStock,
-      minStock: v.minimumStock,
+  const serialized = products.map((product) => ({
+    id: product.id,
+    name: product.name,
+    brand: product.brand.name,
+    variants: product.variants.map((variant) => ({
+      id: variant.id,
+      sku: variant.sku,
+      size: variant.size,
+      color: variant.color,
+      stock: variant.currentStock,
+      minStock: variant.minimumStock,
     })),
   }));
 
@@ -63,13 +83,13 @@ export default async function InventoryPage() {
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline" size="sm">
-            <Link href="/inventory/movements">
+            <Link href="/inventory/movements" prefetch={false}>
               <ArrowRightLeft className="h-4 w-4 mr-1.5" />
               Ledger
             </Link>
           </Button>
           <Button asChild size="sm">
-            <Link href="/inventory/adjust">
+            <Link href="/inventory/adjust" prefetch={false}>
               <PlusSquare className="h-4 w-4 mr-1.5" />
               Adjust
             </Link>

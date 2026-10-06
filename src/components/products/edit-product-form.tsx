@@ -150,25 +150,32 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
   };
 
   return (
-    <div style={{ marginTop: 18, maxWidth: 900 }}>
+    <div className="product-editor">
       {variantError && (
-        <div style={{ padding: 12, marginBottom: 16, background: "#fee2e2", color: "#991b1b", borderRadius: 6 }}>
-          ⚠️ {variantError}
+        <div className="alert">
+          <span>⚠️</span>
+          <span>{variantError}</span>
         </div>
       )}
 
-      {/* Product Master Info Form */}
       <div className="card">
-        <h3>1. Product Master Details</h3>
-        <form action={updateAction} style={{ marginTop: 12 }}>
+        <div className="section-header">
+          <div>
+            <p className="section-kicker">Catalog</p>
+            <h3>Product master details</h3>
+          </div>
+          <span className="pill">{product.gender}</span>
+        </div>
+
+        <form action={updateAction}>
           <input type="hidden" name="productId" value={product.id} />
           <div className="form-grid">
             <div className="field">
-              <label>Product Name</label>
+              <label>Product name</label>
               <input className="input" name="name" defaultValue={product.name} required />
             </div>
             <div className="field">
-              <label>Model Code</label>
+              <label>Model code</label>
               <input className="input" name="modelCode" defaultValue={product.modelCode || ""} />
             </div>
             <div className="field">
@@ -201,31 +208,38 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
               </select>
             </div>
           </div>
-          <div style={{ marginTop: 16 }}>
+
+          <div style={{ marginTop: 18 }}>
             <button type="submit" className="btn btn-primary">
-              Save Product Details
+              Save product details
             </button>
           </div>
         </form>
       </div>
 
-      {/* Size Variants List */}
-      <div className="card" style={{ marginTop: 24 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3>2. Size Variants & Pricing ({product.variants.length} Variants)</h3>
+      <div className="card">
+        <div className="section-header">
+          <div>
+            <p className="section-kicker">Inventory</p>
+            <h3>Size variants & pricing</h3>
+          </div>
           <button
             type="button"
             className="btn btn-secondary"
             onClick={() => setShowAddVariant(!showAddVariant)}
           >
-            {showAddVariant ? "Cancel Add Variant" : "+ Add New Size Variant"}
+            {showAddVariant ? "Cancel" : "+ Add size variant"}
           </button>
         </div>
 
         {showAddVariant && (
-          <form onSubmit={handleAddVariant} style={{ marginTop: 16, padding: 16, background: "#f8fafc", borderRadius: 8 }}>
-            <h4>Add New Size Variant to {product.name}</h4>
-            <div className="form-grid" style={{ marginTop: 12 }}>
+          <form onSubmit={handleAddVariant} className="variant-form">
+            <div className="variant-form__header">
+              <h4>Add size variant</h4>
+              <span className="pill">{product.name}</span>
+            </div>
+
+            <div className="form-grid">
               <div className="field">
                 <label>Size *</label>
                 <input
@@ -261,7 +275,7 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
                 />
               </div>
               <div className="field">
-                <label>Selling Price (₹)</label>
+                <label>Selling price (₹)</label>
                 <input
                   className="input"
                   type="number"
@@ -281,7 +295,7 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
                 />
               </div>
               <div className="field">
-                <label>Opening Stock</label>
+                <label>Opening stock</label>
                 <input
                   className="input"
                   type="number"
@@ -290,9 +304,10 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
                 />
               </div>
             </div>
-            <div style={{ marginTop: 12 }}>
+
+            <div style={{ marginTop: 16 }}>
               <button type="submit" disabled={isAddingVariant} className="btn btn-primary">
-                {isAddingVariant ? "Adding..." : "Add Size Variant"}
+                {isAddingVariant ? "Adding..." : "Add size variant"}
               </button>
             </div>
           </form>
@@ -304,7 +319,7 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
               <tr>
                 <th>Size</th>
                 <th>SKU</th>
-                <th>Selling Price</th>
+                <th>Selling price</th>
                 <th>MRP</th>
                 <th>Stock</th>
                 <th>Status</th>
@@ -320,24 +335,30 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
                       {isEditing ? (
                         <input
                           className="input"
-                          style={{ width: 60, padding: "2px 6px" }}
+                          style={{ minHeight: 36, width: 72 }}
                           value={variantDraft.size || ""}
                           onChange={(e) => setVariantDraft({ ...variantDraft, size: e.target.value })}
                         />
                       ) : (
-                        <strong>Size {v.size}</strong>
+                        <div className="variant-row__meta">
+                          <strong>Size {v.size}</strong>
+                          <small>{v.color || "Color unset"}</small>
+                        </div>
                       )}
                     </td>
                     <td>
                       {isEditing ? (
                         <input
                           className="input"
-                          style={{ padding: "2px 6px" }}
+                          style={{ minHeight: 36 }}
                           value={variantDraft.sku || ""}
                           onChange={(e) => setVariantDraft({ ...variantDraft, sku: e.target.value })}
                         />
                       ) : (
-                        v.sku
+                        <div className="variant-row__meta">
+                          <strong>{v.sku}</strong>
+                          <small>{v.barcode || "No barcode"}</small>
+                        </div>
                       )}
                     </td>
                     <td>
@@ -346,7 +367,7 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
                           className="input"
                           type="number"
                           step="0.01"
-                          style={{ width: 90, padding: "2px 6px" }}
+                          style={{ minHeight: 36, width: 110 }}
                           value={variantDraft.sellingPrice ?? 0}
                           onChange={(e) =>
                             setVariantDraft({ ...variantDraft, sellingPrice: Number(e.target.value) })
@@ -362,7 +383,7 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
                           className="input"
                           type="number"
                           step="0.01"
-                          style={{ width: 90, padding: "2px 6px" }}
+                          style={{ minHeight: 36, width: 110 }}
                           value={variantDraft.mrp ?? 0}
                           onChange={(e) => setVariantDraft({ ...variantDraft, mrp: Number(e.target.value) })}
                         />
@@ -379,7 +400,7 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
                       {isEditing ? (
                         <select
                           className="select"
-                          style={{ padding: "2px 6px" }}
+                          style={{ minHeight: 36 }}
                           value={variantDraft.isActive ? "true" : "false"}
                           onChange={(e) =>
                             setVariantDraft({ ...variantDraft, isActive: e.target.value === "true" })
@@ -396,13 +417,12 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
                     </td>
                     <td>
                       {isEditing ? (
-                        <div style={{ display: "flex", gap: 6 }}>
+                        <div className="cell-actions">
                           <button
                             type="button"
                             disabled={isSavingVariant}
                             onClick={() => handleSaveVariant(v.id)}
                             className="btn btn-primary"
-                            style={{ padding: "4px 8px", fontSize: "0.85rem" }}
                           >
                             Save
                           </button>
@@ -410,7 +430,6 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
                             type="button"
                             onClick={() => setEditingVariantId(null)}
                             className="btn btn-secondary"
-                            style={{ padding: "4px 8px", fontSize: "0.85rem" }}
                           >
                             Cancel
                           </button>
@@ -420,9 +439,8 @@ export function EditProductForm({ product, brands, categories, updateAction }: E
                           type="button"
                           onClick={() => startEditVariant(v)}
                           className="btn btn-secondary"
-                          style={{ padding: "4px 8px", fontSize: "0.85rem" }}
                         >
-                          Edit Price/SKU
+                          Edit
                         </button>
                       )}
                     </td>

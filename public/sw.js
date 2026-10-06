@@ -1,18 +1,30 @@
-const CACHE = "footwear-shell-v1";
-const SHELL = ["/dashboard", "/manifest.webmanifest"];
-
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
   self.skipWaiting();
+  event.waitUntil(Promise.resolve());
 });
 
 self.addEventListener("activate", event => {
-  event.waitUntil(self.clients.claim());
+  self.clients.claim();
+  event.waitUntil(Promise.resolve());
 });
 
 self.addEventListener("fetch", event => {
-  if (event.request.method !== "GET") return;
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
-  );
+  const { request } = event;
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+  const isSameOrigin = url.origin === self.location.origin;
+  const isDynamicRequest =
+    request.mode === "navigate" ||
+    request.headers.get("rsc") === "1" ||
+    url.pathname.startsWith("/_next/data") ||
+    url.pathname.startsWith("/api/") ||
+    url.searchParams.has("_rsc") ||
+    url.searchParams.has("action");
+
+  if (!isSameOrigin || isDynamicRequest) {
+    return;
+  }
+
+  event.respondWith(fetch(request));
 });
