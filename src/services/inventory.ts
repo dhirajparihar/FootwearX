@@ -115,6 +115,9 @@ export async function receivePurchase(input: {
   items: Array<{ variantId: string; quantity: number; unitCost: number }>;
   discount?: number;
   tax?: number;
+  amountPaid?: number;
+  paymentMethod?: "CASH" | "UPI" | "CARD" | "OTHER";
+  dueDate?: Date;
 }) {
   if (!input.items.length) {
     throw new Error("Purchase must contain items.");
@@ -141,9 +144,14 @@ export async function receivePurchase(input: {
     const discount = money(input.discount ?? 0);
     const tax = money(input.tax ?? 0);
     const total = money(subtotal - discount + tax);
+    const paid = money(input.amountPaid ?? 0);
 
     if (discount < 0 || discount > subtotal) {
       throw new Error("Invalid discount amount.");
+    }
+
+    if (paid > total + 0.01) {
+      throw new Error(`Total payment ₹${paid.toFixed(2)} cannot exceed net total ₹${total.toFixed(2)}.`);
     }
 
     const purchase = await tx.purchase.create({
@@ -156,9 +164,20 @@ export async function receivePurchase(input: {
         discount,
         tax,
         total,
+        dueDate: input.dueDate,
         status: "COMPLETED",
       },
     });
+
+    if (paid > 0) {
+      await tx.purchasePayment.create({
+        data: {
+          purchaseId: purchase.id,
+          method: input.paymentMethod || "OTHER",
+          amount: paid,
+        }
+      });
+    }
 
     for (const item of input.items) {
       await tx.purchaseItem.create({
@@ -215,9 +234,9 @@ export async function createSale(input: {
   }>;
   discount?: number;
   tax?: number;
+  dueDate?: Date;
 }) {
   if (!input.items.length) throw new Error("Cart is empty.");
-  if (!input.payments.length) throw new Error("Payment is required.");
 
   return prisma.$transaction(async (tx) => {
     const unique = new Set(input.items.map((x) => x.variantId));
@@ -264,8 +283,12 @@ export async function createSale(input: {
     }
 
     const paid = money(input.payments.reduce((sum, p) => sum + p.amount, 0));
-    if (Math.abs(paid - total) > 0.009) {
-      throw new Error(`Total payment ₹${paid.toFixed(2)} must equal net total ₹${total.toFixed(2)}.`);
+    if (paid > total + 0.01) {
+      throw new Error(`Total payment ₹${paid.toFixed(2)} cannot exceed net total ₹${total.toFixed(2)}.`);
+    }
+
+    if (paid < total - 0.01 && !input.customerId) {
+      throw new Error("Customer must be selected for Udhaar (Credit) bills.");
     }
 
     if (input.customerId) {
@@ -292,6 +315,7 @@ export async function createSale(input: {
         discount,
         tax,
         total,
+        dueDate: input.dueDate,
         status: "COMPLETED",
       },
     });
@@ -303,6 +327,7 @@ export async function createSale(input: {
           saleId: sale.id,
           variantId: item.variantId,
           quantity: item.quantity,
+          unitCost: variants[i].purchasePrice,
           unitPrice: item.unitPrice,
           total: money(item.quantity * item.unitPrice),
         },
