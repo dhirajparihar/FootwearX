@@ -1,0 +1,1 @@
+Use /inventory/movements to view the stock ledger.
