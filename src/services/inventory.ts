@@ -18,8 +18,8 @@ export async function adjustStock(input: {
   }
 
   return prisma.$transaction(async (tx) => {
-    const variant = await tx.productVariant.findUnique({
-      where: { id: input.variantId },
+    const variant = await tx.productVariant.findFirst({
+      where: { id: input.variantId, product: { is: { shopId: input.shopId } } },
       select: { id: true, currentStock: true, purchasePrice: true },
     });
 
@@ -34,7 +34,7 @@ export async function adjustStock(input: {
     const updated = await tx.productVariant.updateMany({
       where: {
         id: variant.id,
-        product: { shopId: input.shopId },
+        product: { is: { shopId: input.shopId } },
         ...(input.delta < 0 ? { currentStock: { gte: Math.abs(input.delta) } } : {}),
       },
       data: { currentStock: { increment: input.delta } },
@@ -81,8 +81,8 @@ export async function damageStock(input: {
   }
 
   return prisma.$transaction(async (tx) => {
-    const variant = await tx.productVariant.findUnique({
-      where: { id: input.variantId },
+    const variant = await tx.productVariant.findFirst({
+      where: { id: input.variantId, product: { is: { shopId: input.shopId } } },
       select: { currentStock: true, purchasePrice: true },
     });
 
@@ -91,7 +91,7 @@ export async function damageStock(input: {
     }
 
     const updated = await tx.productVariant.updateMany({
-      where: { id: input.variantId, product: { shopId: input.shopId }, currentStock: { gte: input.quantity } },
+      where: { id: input.variantId, product: { is: { shopId: input.shopId } }, currentStock: { gte: input.quantity } },
       data: { currentStock: { decrement: input.quantity } },
     });
 
@@ -141,7 +141,7 @@ export async function receivePurchase(input: {
         throw new Error("Invalid purchase item details.");
       }
       subtotal += item.quantity * item.unitCost;
-      const variant = await tx.productVariant.findUnique({ where: { id: item.variantId } });
+      const variant = await tx.productVariant.findFirst({ where: { id: item.variantId, product: { is: { shopId: input.shopId } } } });
       if (!variant || !variant.isActive) {
         throw new Error("SKU not found or is inactive.");
       }
@@ -261,8 +261,8 @@ export async function createSale(input: {
         throw new Error("Invalid sale item line.");
       }
 
-      const variant = await tx.productVariant.findUnique({
-        where: { id: item.variantId },
+      const variant = await tx.productVariant.findFirst({
+        where: { id: item.variantId, product: { is: { shopId: input.shopId } } },
         select: { id: true, currentStock: true, isActive: true, purchasePrice: true },
       });
 
@@ -271,7 +271,7 @@ export async function createSale(input: {
       }
 
       const updated = await tx.productVariant.updateMany({
-        where: { id: item.variantId, product: { shopId: input.shopId }, isActive: true, currentStock: { gte: item.quantity } },
+        where: { id: item.variantId, product: { is: { shopId: input.shopId } }, isActive: true, currentStock: { gte: item.quantity } },
         data: { currentStock: { decrement: item.quantity } },
       });
 
@@ -301,7 +301,7 @@ export async function createSale(input: {
     }
 
     if (input.customerId) {
-      const customer = await tx.customer.findUnique({ where: { id: input.customerId } });
+      const customer = await tx.customer.findFirst({ where: { id: input.customerId, shopId: input.shopId } });
       if (!customer || customer.shopId !== input.shopId) throw new Error("Customer not found.");
     }
 
@@ -390,8 +390,8 @@ export async function returnSale(input: {
   if (!input.items.length) throw new Error("Return must contain items.");
 
   return prisma.$transaction(async (tx) => {
-    const sale = await tx.sale.findUnique({
-      where: { id: input.saleId },
+    const sale = await tx.sale.findFirst({
+      where: { id: input.saleId, shopId: input.shopId },
       include: { items: true },
     });
 
@@ -483,8 +483,8 @@ export async function returnPurchase(input: {
   if (!input.items.length) throw new Error("Return must contain items.");
 
   return prisma.$transaction(async (tx) => {
-    const purchase = await tx.purchase.findUnique({
-      where: { id: input.purchaseId },
+    const purchase = await tx.purchase.findFirst({
+      where: { id: input.purchaseId, shopId: input.shopId },
       include: { items: true },
     });
 

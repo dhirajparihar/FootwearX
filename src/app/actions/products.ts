@@ -174,6 +174,52 @@ export async function createBatchProduct(input: unknown) {
   }
 }
 
+// ── Inline Brand/Category creation ──────────────────────────────────────────
+
+export async function createBrand(name: string) {
+  try {
+    const user = await requireRole(["OWNER", "MANAGER"]);
+    const trimmed = name.trim();
+    if (!trimmed) return { ok: false as const, error: "Brand name is required." };
+
+    const brand = await prisma.brand.upsert({
+      where: { shopId_name: { shopId: user.shopId, name: trimmed } },
+      update: { isActive: true },
+      create: { shopId: user.shopId, name: trimmed },
+    });
+
+    return { ok: true as const, brand: { id: brand.id, name: brand.name } };
+  } catch (error) {
+    return {
+      ok: false as const,
+      error: error instanceof Error ? error.message : "Failed to create brand.",
+    };
+  }
+}
+
+export async function createCategory(name: string) {
+  try {
+    const user = await requireRole(["OWNER", "MANAGER"]);
+    const trimmed = name.trim();
+    if (!trimmed) return { ok: false as const, error: "Category name is required." };
+
+    const category = await prisma.category.upsert({
+      where: { shopId_name: { shopId: user.shopId, name: trimmed } },
+      update: { isActive: true },
+      create: { shopId: user.shopId, name: trimmed },
+    });
+
+    return { ok: true as const, category: { id: category.id, name: category.name } };
+  } catch (error) {
+    return {
+      ok: false as const,
+      error: error instanceof Error ? error.message : "Failed to create category.",
+    };
+  }
+}
+
+// ── Existing actions ─────────────────────────────────────────────────────────
+
 export async function updateProductDetails(formData: FormData) {
   const user = await requireRole(["OWNER", "MANAGER"]);
 
@@ -189,7 +235,7 @@ export async function updateProductDetails(formData: FormData) {
   }
 
   await prisma.$transaction(async (tx) => {
-    const product = await tx.product.updateMany({
+    await tx.product.updateMany({
       where: { id: productId, shopId: user.shopId },
       data: {
         name,
@@ -229,7 +275,7 @@ export async function updateVariant(input: {
 
     await prisma.$transaction(async (tx) => {
       const current = await tx.productVariant.findFirst({
-        where: { id: input.variantId, product: { shopId: user.shopId } },
+        where: { id: input.variantId, product: { is: { shopId: user.shopId } } },
       });
       if (!current) throw new Error("Variant not found.");
 
